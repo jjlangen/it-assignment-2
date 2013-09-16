@@ -16,7 +16,7 @@ namespace CamCapture
     public partial class CamCapture : Form
     {
         //declaring global variables
-        private Capture capture = null;        //takes images from camera as image frames
+        private Capture capture = null; //takes images from camera as image frames
         private bool captureInProgress; // checks if capture is executing
 
         public CamCapture()

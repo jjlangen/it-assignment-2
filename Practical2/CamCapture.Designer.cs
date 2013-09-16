@@ -38,6 +38,7 @@
             this.CamImageBox.Location = new System.Drawing.Point(12, 12);
             this.CamImageBox.Name = "CamImageBox";
             this.CamImageBox.Size = new System.Drawing.Size(490, 328);
+            this.CamImageBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
             this.CamImageBox.TabIndex = 2;
             this.CamImageBox.TabStop = false;
             // 
@@ -62,6 +63,7 @@
             this.Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)(this.CamImageBox)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 

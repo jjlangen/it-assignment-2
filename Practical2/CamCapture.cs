@@ -26,8 +26,8 @@ namespace CamCapture
 
         private void ProcessFrame(object sender, EventArgs arg)
         {
-            Image<Bgr, Byte> ImageFrame = capture.QueryFrame();  //line 1
-            CamImageBox.Image = ImageFrame;        //line 2
+            Image<Bgr, Byte> frame = capture.QueryFrame();
+            CamImageBox.Image = frame;
         }
 
         private void ReleaseData()
@@ -36,7 +36,7 @@ namespace CamCapture
                 capture.Dispose();
         }
 
-        private void btnStart_Click_1(object sender, EventArgs e)
+        private void btnStart_Click(object sender, EventArgs e)
         {
             #region if capture is not created, create it now
             if (capture == null)

@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.CamImageBox = new Emgu.CV.UI.ImageBox();
             this.btnStart = new System.Windows.Forms.Button();
             this.btnOpenSave = new System.Windows.Forms.Button();

@@ -20,7 +20,7 @@ namespace Practical2
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new CamCapture.CamCapture());
+            Application.Run(new Form1());
         }
     }
 }

@@ -1,142 +1,203 @@
 ﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
+using System.Threading;
+using System.Diagnostics;
+
 using Emgu.CV;
 using Emgu.CV.Structure;
 using Emgu.CV.UI;
-using Emgu.CV.GPU;
-using Emgu.CV.Util;
-using System.Threading;
 
-namespace CamCapture
+namespace Practical2
 {
-    public partial class CamCapture : Form
+    public partial class Form1 : Form
     {
-        //declaring global variables
-        private Capture capture = new Capture(); //takes images from camera as image frames
-        OpenFileDialog openFile = new OpenFileDialog();
-        SaveFileDialog saveFile = new SaveFileDialog();
-        private bool captureInProgress = false; // checks if capture is executing        
-        bool play = false; bool record = false;
-        const int fps = 20;
-        int videoNr;
+        private Capture capture;
+        SaveFileDialog saveFile;
+        OpenFileDialog openFile;
         VideoWriter writer;
-        Image<Bgr, Byte> frame;
-        BackgroundWorker bgworker = new BackgroundWorker();
-        
+        int frameWidth, frameHeight;
+        double frameRate = 10;
 
-        public CamCapture()
+        bool play = false;
+        bool record = false;
+
+        VideoState state = VideoState.Viewing;
+        public enum VideoState
+        {
+            Viewing,
+            Recording
+        };
+        
+        public Form1()
         {
             InitializeComponent();
-            bgworker.DoWork += bgworker_DoWork;
         }
 
-
-        private void ProcessFrame(object sender, EventArgs arg)
+        private void Form1_Load(object sender, EventArgs e)
         {
-            frame = capture.QueryFrame();
-            CamImageBox.Image = frame;
+            this.Text = "Marker Tracking!";
+            capture = new Capture();
         }
 
-        private void ReleaseData()
+        private void Update(object sender, EventArgs e)
         {
-            if (capture != null)
-                capture.Dispose();
+            if (state == VideoState.Viewing)
+            {
+                try
+                { showImage(capture.RetrieveBgrFrame().ToBitmap()); }
+                catch { }
+            }
+
+            else if (state == VideoState.Recording)
+            {
+                Image<Bgr, byte> img = capture.RetrieveBgrFrame();
+                showImage(capture.RetrieveBgrFrame().ToBitmap());
+
+                if (record && writer.Ptr != IntPtr.Zero)
+                { writer.WriteFrame(img); }
+            }
         }
+
+        private delegate void ShowImageDelegate(Bitmap image);
+        private void showImage(Bitmap image)
+        {
+            if (imageBox.InvokeRequired)
+            {
+                try
+                {
+                    ShowImageDelegate DI = new ShowImageDelegate(showImage);
+                    this.BeginInvoke(DI, new object[] { image });
+                }
+                catch { }
+            }
+            else
+            {
+                imageBox.Image = image;
+            }
+        } 
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-            captureInProgress = !captureInProgress;
-            if (!captureInProgress)
-            {  //if camera is getting frames then stop the capture and set button Text
-                // "Start" for resuming capture
-                btnStart.Text = "Play";
-                btnRecord.Enabled = false;
-                Application.Idle -= ProcessFrame;
-            }
-            else
+            if (capture != null)
             {
-                //if camera is NOT getting frames then start the capture and set button
-                // Text to "Stop" for pausing capture
-                btnStart.Text = "Pause";
-                btnRecord.Enabled = true;
-                Application.Idle += ProcessFrame;
-            }            
-        }
-
-
-
-        private void btnOpenSave_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        // Start or stops the recording process
-        private void btnRecord_Click(object sender, EventArgs e)
-        {
-            if (record)
-            {
-                record = false;
-                /*
-                saveFile.Filter = "Avi File | *.avi";
-                
-                if (saveFile.ShowDialog() == DialogResult.OK)
+                if (state == VideoState.Viewing)
                 {
-                    try
+                    play = !play;
+                    if (play)
                     {
-                        File.Move("vid.avi", saveFile.FileName);
+                        btnStart.Text = "Pause";
+                        btnStart.ForeColor = Color.Black;
+                        capture.ImageGrabbed += Update;
+                        capture.Start();
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        MessageBox.Show(@ex.ToString() + "\n" + saveFile.FileName, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        btnStart.Text = "Play";
+                        capture.Pause();
                     }
                 }
-                 */
-                MessageBox.Show("Video was saved succesfully to vid" + videoNr + ".avi", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                btnRecord.Text = "Start Record";
-            }
-            else
-            {
-                record = true;
-                btnRecord.Text = "Stop Record";
-                bgworker.RunWorkerAsync();
+                else if (state == VideoState.Recording)
+                {
+                    record = !record;
+                    if (record)
+                    {
+                        btnStart.Text = "Stop Recording";
+                        btnStart.ForeColor = Color.Red;
+                        if (writer.Ptr == IntPtr.Zero)
+                            checkRecord_CheckedChanged(null, null);
+                    }
+                    else
+                    { 
+                        writer.Dispose();
+                        btnStart.ForeColor = Color.Black;
+                        btnStart.Text = "Record Video";
+                    }
+                }
             }
         }
 
-        // Backgroundworker tasked to record outside of the main thread
-        private void bgworker_DoWork(object s, DoWorkEventArgs e)
+        private void checkRecord_CheckedChanged(object sender, EventArgs e)
         {
-            startRecording();
+            saveFile = new SaveFileDialog();
+            if (checkRecord.Checked)
+            {
+                saveFile.Filter = "Video Files|*.avi;*.mp4;*.mpg";
+                if (saveFile.ShowDialog() == DialogResult.OK)
+                {
+                    if (capture != null)
+                    {
+                        if (capture.GrabProcessState == System.Threading.ThreadState.Running)
+                            capture.Stop();
+                        capture.Dispose();
+                    }
+                    try
+                    {
+                        this.Text = "Saving Video: " + saveFile.FileName;
+
+                        state = VideoState.Recording;
+
+                        capture = new Capture();
+                        capture.ImageGrabbed += Update;
+
+                        frameWidth = (int)capture.GetCaptureProperty(Emgu.CV.CvEnum.CAP_PROP.CV_CAP_PROP_FRAME_WIDTH);
+                        frameHeight = (int)capture.GetCaptureProperty(Emgu.CV.CvEnum.CAP_PROP.CV_CAP_PROP_FRAME_HEIGHT);
+
+                        //frameRate = 5;
+
+                        writer = new VideoWriter(saveFile.FileName, -1, (int)frameRate, frameWidth, frameHeight, true);
+
+                        btnStart.Text = "Record Video";
+
+                        record = false;
+
+                        capture.Start();
+                    }
+                    catch (NullReferenceException exception)
+                    { MessageBox.Show(exception.Message); }
+                }
+            }
         }
 
-        // Method which writes the frames from the videostream to a Videowriter object
-        private void startRecording()
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
-            fileSaving();
-            while (record)
+            if (capture != null)
             {
-                writer.WriteFrame(frame);
-                Thread.Sleep(1000 / fps);
+                if (capture.GrabProcessState == System.Threading.ThreadState.Running) capture.Stop();
+                capture.Dispose();
             }
-            // Release the Videowriter object so the file can be opened
-            writer.Dispose();
         }
 
-        // This method finds a an unused filename to save the recording to: vid1.avi, vid2.avi, vid3.avi etc.
-        private void fileSaving()
+        private void btnOpen_Click(object sender, EventArgs e)
         {
-            videoNr = 1;
-            for (int i = 1; i < 100 && File.Exists("vid" + i + ".avi"); i++)
+            openFile = new OpenFileDialog();
+            openFile.Filter = "Video Files|*.avi;*.mp4;*.mpg";
+            if (openFile.ShowDialog() == DialogResult.OK)
             {
-                videoNr++;
+                if (capture != null)
+                {
+                    if (capture.GrabProcessState == System.Threading.ThreadState.Running)
+                        capture.Stop();
+                    capture.Dispose();
+                }
+                try
+                {
+                    this.Text = "Viewing Video: " + openFile.FileName;
+                    state = VideoState.Viewing;
+
+                    capture = new Capture(openFile.FileName);
+                    capture.ImageGrabbed += Update;
+
+                    btnStart.Text = "Play";
+                    btnStart.ForeColor = Color.Green;
+                    play = false;
+                }
+                catch (NullReferenceException ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
-            writer = new VideoWriter("vid" + videoNr + ".avi", fps, 640, 480, true);
         }
+
     }
 }

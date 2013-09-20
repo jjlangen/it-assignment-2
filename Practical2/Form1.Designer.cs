@@ -1,6 +1,6 @@
-﻿namespace CamCapture
+﻿namespace Practical2
 {
-    partial class CamCapture
+    partial class Form1
     {
         /// <summary>
         /// Required designer variable.
@@ -28,77 +28,113 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.CamImageBox = new Emgu.CV.UI.ImageBox();
             this.btnStart = new System.Windows.Forms.Button();
-            this.btnOpenSave = new System.Windows.Forms.Button();
-            this.btnRecord = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.CamImageBox)).BeginInit();
+            this.btnTracking = new System.Windows.Forms.Button();
+            this.btnFaceDetection = new System.Windows.Forms.Button();
+            this.btnScan = new System.Windows.Forms.Button();
+            this.imageBox = new System.Windows.Forms.PictureBox();
+            this.checkRecord = new System.Windows.Forms.CheckBox();
+            this.btnOpen = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.imageBox)).BeginInit();
             this.SuspendLayout();
-            // 
-            // CamImageBox
-            // 
-            this.CamImageBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.CamImageBox.FunctionalMode = Emgu.CV.UI.ImageBox.FunctionalModeOption.Minimum;
-            this.CamImageBox.Location = new System.Drawing.Point(12, 12);
-            this.CamImageBox.Name = "CamImageBox";
-            this.CamImageBox.Size = new System.Drawing.Size(490, 328);
-            this.CamImageBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
-            this.CamImageBox.TabIndex = 2;
-            this.CamImageBox.TabStop = false;
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(427, 346);
+            this.btnStart.ForeColor = System.Drawing.Color.Black;
+            this.btnStart.Location = new System.Drawing.Point(12, 546);
             this.btnStart.Name = "btnStart";
-            this.btnStart.Size = new System.Drawing.Size(75, 23);
-            this.btnStart.TabIndex = 3;
+            this.btnStart.Size = new System.Drawing.Size(97, 23);
+            this.btnStart.TabIndex = 0;
             this.btnStart.Text = "Play";
             this.btnStart.UseVisualStyleBackColor = true;
             this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
             // 
-            // btnOpenSave
+            // btnTracking
             // 
-            this.btnOpenSave.Location = new System.Drawing.Point(332, 346);
-            this.btnOpenSave.Name = "btnOpenSave";
-            this.btnOpenSave.Size = new System.Drawing.Size(75, 23);
-            this.btnOpenSave.TabIndex = 4;
-            this.btnOpenSave.Text = "Open";
-            this.btnOpenSave.UseVisualStyleBackColor = true;
-            this.btnOpenSave.Click += new System.EventHandler(this.btnOpenSave_Click);
+            this.btnTracking.Location = new System.Drawing.Point(435, 546);
+            this.btnTracking.Name = "btnTracking";
+            this.btnTracking.Size = new System.Drawing.Size(98, 23);
+            this.btnTracking.TabIndex = 1;
+            this.btnTracking.Text = "Marker Tracking";
+            this.btnTracking.UseVisualStyleBackColor = true;
             // 
-            // btnRecord
+            // btnFaceDetection
             // 
-            this.btnRecord.Enabled = false;
-            this.btnRecord.Location = new System.Drawing.Point(231, 346);
-            this.btnRecord.Name = "btnRecord";
-            this.btnRecord.Size = new System.Drawing.Size(75, 23);
-            this.btnRecord.TabIndex = 5;
-            this.btnRecord.Text = "Record";
-            this.btnRecord.UseVisualStyleBackColor = true;
-            this.btnRecord.Click += new System.EventHandler(this.btnRecord_Click);
+            this.btnFaceDetection.Location = new System.Drawing.Point(548, 546);
+            this.btnFaceDetection.Name = "btnFaceDetection";
+            this.btnFaceDetection.Size = new System.Drawing.Size(90, 23);
+            this.btnFaceDetection.TabIndex = 2;
+            this.btnFaceDetection.Text = "Face Detection";
+            this.btnFaceDetection.UseVisualStyleBackColor = true;
             // 
-            // CamCapture
+            // btnScan
+            // 
+            this.btnScan.Location = new System.Drawing.Point(654, 546);
+            this.btnScan.Name = "btnScan";
+            this.btnScan.Size = new System.Drawing.Size(89, 23);
+            this.btnScan.TabIndex = 4;
+            this.btnScan.Text = "Start Scan";
+            this.btnScan.UseVisualStyleBackColor = true;
+            // 
+            // imageBox
+            // 
+            this.imageBox.Location = new System.Drawing.Point(13, 13);
+            this.imageBox.Name = "imageBox";
+            this.imageBox.Size = new System.Drawing.Size(730, 492);
+            this.imageBox.TabIndex = 6;
+            this.imageBox.TabStop = false;
+            // 
+            // checkRecord
+            // 
+            this.checkRecord.AutoSize = true;
+            this.checkRecord.Location = new System.Drawing.Point(12, 511);
+            this.checkRecord.Name = "checkRecord";
+            this.checkRecord.Size = new System.Drawing.Size(91, 17);
+            this.checkRecord.TabIndex = 7;
+            this.checkRecord.Text = "Record Video";
+            this.checkRecord.UseVisualStyleBackColor = true;
+            this.checkRecord.CheckedChanged += new System.EventHandler(this.checkRecord_CheckedChanged);
+            // 
+            // btnOpen
+            // 
+            this.btnOpen.Location = new System.Drawing.Point(144, 546);
+            this.btnOpen.Name = "btnOpen";
+            this.btnOpen.Size = new System.Drawing.Size(99, 23);
+            this.btnOpen.TabIndex = 8;
+            this.btnOpen.Text = "Open...";
+            this.btnOpen.UseVisualStyleBackColor = true;
+            this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
+            // 
+            // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(514, 377);
-            this.Controls.Add(this.btnRecord);
-            this.Controls.Add(this.btnOpenSave);
+            this.ClientSize = new System.Drawing.Size(755, 581);
+            this.Controls.Add(this.btnOpen);
+            this.Controls.Add(this.checkRecord);
+            this.Controls.Add(this.imageBox);
+            this.Controls.Add(this.btnScan);
+            this.Controls.Add(this.btnFaceDetection);
+            this.Controls.Add(this.btnTracking);
             this.Controls.Add(this.btnStart);
-            this.Controls.Add(this.CamImageBox);
-            this.Name = "CamCapture";
+            this.Name = "Form1";
             this.Text = "Form1";
-            ((System.ComponentModel.ISupportInitialize)(this.CamImageBox)).EndInit();
+            this.Load += new System.EventHandler(this.Form1_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.imageBox)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
 
-        private Emgu.CV.UI.ImageBox CamImageBox;
         private System.Windows.Forms.Button btnStart;
-        private System.Windows.Forms.Button btnOpenSave;
-        private System.Windows.Forms.Button btnRecord;
+        private System.Windows.Forms.Button btnTracking;
+        private System.Windows.Forms.Button btnFaceDetection;
+        private System.Windows.Forms.Button btnScan;
+        private System.Windows.Forms.PictureBox imageBox;
+        private System.Windows.Forms.CheckBox checkRecord;
+        private System.Windows.Forms.Button btnOpen;
     }
 }
 

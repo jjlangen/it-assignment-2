@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using System.Threading;
 using System.Diagnostics;
-using System.Linq;
 
 using Emgu.CV;
 using Emgu.CV.Structure;
@@ -41,7 +41,7 @@ namespace Practical2
             Viewing,
             Recording
         };
-        
+
         public Form1()
         {
             InitializeComponent();
@@ -122,7 +122,7 @@ namespace Practical2
                             checkRecord_CheckedChanged(null, null);
                     }
                     else
-                    { 
+                    {
                         writer.Dispose();
                         btnStart.ForeColor = Color.Black;
                         btnStart.Text = "Record Video";
@@ -268,9 +268,7 @@ namespace Practical2
             Image<Bgr, Byte> smoothImg = origImg.SmoothGaussian(5, 5, 2, 2);
             Image<Hsv, Byte> hsvImg = smoothImg.Convert<Hsv, Byte>();
             Image<Gray, Byte>[] channels = hsvImg.Split();
-
-            // Detect orange
-            Image<Gray, Byte> hue = channels[0].InRange(new Gray(0), new Gray(30));
+            Image<Gray, Byte> hue = channels[0].InRange(new Gray(100), new Gray(200));
             Image<Gray, Byte> saturation = channels[1].InRange(new Gray(200), new Gray(255));
             Image<Gray, Byte> hsImg = (hue.And(saturation));
 
@@ -289,6 +287,9 @@ namespace Practical2
                 }
             }
 
+            //  histX = Array.ConvertAll(histX, item => item / hsImg.Width);
+            //  histY = Array.ConvertAll(histY, item => item / hsImg.Height);
+
             histX = Array.ConvertAll(histX, item => (item < .5 * histX.Max()) ? 0 : item);
             histY = Array.ConvertAll(histY, item => (item < .5 * histX.Max()) ? 0 : item);
 
@@ -296,21 +297,8 @@ namespace Practical2
             int y1 = Array.FindIndex(histY, item => item > 0);
             int x2 = Array.FindLastIndex(histX, item => item > 0);
             int y2 = Array.FindLastIndex(histY, item => item > 0);
-            /*
-            for (int x = 0; x < hsImg.Width; x++)
-            {
-                double t = histX[x] * hsImg.Width;
-                origImg.Draw(new LineSegment2D(new Point(x, 0), new Point(x, (int)t)), new Bgr(255, 0, 0), 1);
-            }
 
-            for (int y = 0; y < hsImg.Height; y++)
-            {
-                double t = histY[y] * hsImg.Height;
-                origImg.Draw(new LineSegment2D(new Point(0, y), new Point((int)t, y)), new Bgr(255, 0, 0), 1);
-            }
-            */
-            origImg.Draw(new Rectangle(x1, y1, x2 - x1, y2 - y1), new Bgr(0, 255, 0), 3);
-
+            origImg.Draw(new Rectangle(x1, y1, x2 - x1, y2 - y1), new Bgr(100, 100, 100), 3);
 
             showImage(origImg.ToBitmap());
         }

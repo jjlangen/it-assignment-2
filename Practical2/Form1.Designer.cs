@@ -35,6 +35,7 @@
             this.imageBox = new System.Windows.Forms.PictureBox();
             this.checkRecord = new System.Windows.Forms.CheckBox();
             this.btnOpen = new System.Windows.Forms.Button();
+            this.lbl = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.imageBox)).BeginInit();
             this.SuspendLayout();
             // 
@@ -57,6 +58,7 @@
             this.btnTracking.TabIndex = 1;
             this.btnTracking.Text = "Marker Tracking";
             this.btnTracking.UseVisualStyleBackColor = true;
+            this.btnTracking.Click += new System.EventHandler(this.btnTracking_Click);
             // 
             // btnFaceDetection
             // 
@@ -66,6 +68,7 @@
             this.btnFaceDetection.TabIndex = 2;
             this.btnFaceDetection.Text = "Face Detection";
             this.btnFaceDetection.UseVisualStyleBackColor = true;
+            this.btnFaceDetection.Click += new System.EventHandler(this.btnFaceDetection_Click);
             // 
             // btnScan
             // 
@@ -105,11 +108,21 @@
             this.btnOpen.UseVisualStyleBackColor = true;
             this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
             // 
+            // lbl
+            // 
+            this.lbl.AutoSize = true;
+            this.lbl.Location = new System.Drawing.Point(435, 512);
+            this.lbl.Name = "lbl";
+            this.lbl.Size = new System.Drawing.Size(35, 13);
+            this.lbl.TabIndex = 9;
+            this.lbl.Text = "label1";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(755, 581);
+            this.Controls.Add(this.lbl);
             this.Controls.Add(this.btnOpen);
             this.Controls.Add(this.checkRecord);
             this.Controls.Add(this.imageBox);
@@ -135,6 +148,7 @@
         private System.Windows.Forms.PictureBox imageBox;
         private System.Windows.Forms.CheckBox checkRecord;
         private System.Windows.Forms.Button btnOpen;
+        private System.Windows.Forms.Label lbl;
     }
 }
 

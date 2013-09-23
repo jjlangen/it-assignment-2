@@ -489,7 +489,7 @@ namespace Practical2
                 Image imageImg = origImg.ToBitmap();
                 Graphics canvas = Graphics.FromImage(imageImg);
 
-                Image janKlaassen = Image.FromFile(@"C:\Downloads\janklaassen.png", true);
+                Image janKlaassen = Image.FromFile(@"janklaassen.png", true);
                 canvas.DrawImage(janKlaassen, new Rectangle(cx, cy, 100, 150), 0, 0, 100, 150, GraphicsUnit.Pixel);
 
                 Bitmap bitmapImg = new Bitmap(imageImg);

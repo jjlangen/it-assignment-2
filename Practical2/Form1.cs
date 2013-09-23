@@ -314,28 +314,28 @@ namespace Practical2
             }
         }
 
-        public static TOutput[,] ConvertAll<TInput, TOutput>(TInput[,] array, Converter<TInput, TOutput> converter)
+
+        // Converts a two-dimensional array
+        public static TOutput[,] ConvertAll<TInput, TOutput>(TInput[,] arr, Converter<TInput, TOutput> conv)
         {
-            if (array == null)
+            if (arr == null)
             {
                 throw new ArgumentNullException("array");
             }
-            if (converter == null)
+            int h = arr.GetLength(0);
+            int w = arr.GetLength(1);
+            TOutput[,] locarr = new TOutput[w, h];
+            if (conv == null)
             {
                 throw new ArgumentNullException("converter");
             }
-            int height = array.GetLength(0);
-            int width = array.GetLength(1);
-            TOutput[,] localArray = new TOutput[width, height];
-            for (int i = 0; i < height; i++)
+            for (int k = 0; k < h; k++)
             {
-                for (int j = 0; j < width; j++)
-                    localArray[i, j] = converter(array[i, j]);
+                for (int l = 0; l < w; l++)
+                    locarr[k, l] = conv(arr[k, l]);
             }
-            return localArray;
+            return locarr;
         }
-
-
 
         private void trainingStage()
         {
@@ -366,7 +366,7 @@ namespace Practical2
             */
                         
             // 3D histogram
-            int[,] hist3D = new int[10, 10];
+            double[,] hist3D = new double[10, 10];
 
             for (int x = 0; x < hsvImg.Width; x++)
             {
@@ -397,10 +397,12 @@ namespace Practical2
             Image<Bgr, Byte> origImg = capture.RetrieveBgrFrame();
             Image<Bgr, Byte> smoothImg = origImg.SmoothGaussian(gs1, gs2, gs3, gs4);
             Image<Hsv, Byte> hsvImg = smoothImg.Convert<Hsv, Byte>();
+            /*
             Image<Gray, Byte>[] channels = hsvImg.Split();
             Image<Gray, Byte> hue = channels[0].InRange(new Gray(0), new Gray(30));
             Image<Gray, Byte> saturation = channels[1].InRange(new Gray(200), new Gray(255));
             Image<Gray, Byte> hsImg = (hue.And(saturation));
+            
 
             // 2D histogram
             double[] histX = new double[hsImg.Width];
@@ -417,37 +419,65 @@ namespace Practical2
                     }
                 }
             }
-
-            /* Normalization
+            
+            // Normalization
             histX = Array.ConvertAll(histX, item => item / hsImg.Width);
             histY = Array.ConvertAll(histY, item => item / hsImg.Height);
             */
 
-            /* 3D histogram
-            double[,] histXY = new double[hsImg.Width, hsImg.Height];
+            // 3D histogram
+            double[,] hist3D = new double[10, 10];
+            double[,] Tspace = new double[hsvImg.Width, hsvImg.Height];
+            double threshold = 0.0; // Greater than threshold
 
-            for (int x = 1; x < hsImg.Width; x++)
+            for (int x = 0; x < hsvImg.Width; x++)
             {
-                for (int y = 1; y < hsImg.Height; y++)
+                for (int y = 0; y < hsvImg.Height; y++)
                 {
-                    if (hsImg.Data[y, x, 0] == 255)
+                    double h = Math.Round(hsvImg.Data[y, x, 0] / 255d, 1);
+                    h = (h == 0) ? 0 : ((h - 0.1) * 10d);
+
+                    double s = Math.Round(hsvImg.Data[y, x, 1] / 255d, 1);
+                    s = (s == 0) ? 0 : ((s - 0.1) * 10d);
+
+                    if (hist3D[(int)h, (int)s] > threshold)
+                        Tspace[x, y] = 255;
+                    else
+                        Tspace[x, y] = 0;
+                }
+            }
+
+            double[] histX = new double[hsvImg.Width];
+            double[] histY = new double[hsvImg.Height];
+
+            for (int x = 0; x < hsvImg.Width; x++)
+            {
+                for (int y = 0; y < hsvImg.Height; y++)
+                {
+                    if (hsvImg.Data[y, x, 0] == 255)
                     {
                         histX[x]++;
                         histY[y]++;
                     }
                 }
             }
-            */
 
-            histX = Array.ConvertAll(histX, item => (item < .5 * histX.Max()) ? 0 : item);
-            histY = Array.ConvertAll(histY, item => (item < .5 * histX.Max()) ? 0 : item);
+
+
+
+
+
+
+
+            //histX = Array.ConvertAll(histX, item => (item < .5 * histX.Max()) ? 0 : item);
+            // histY = Array.ConvertAll(histY, item => (item < .5 * histX.Max()) ? 0 : item);
 
 
 
             //origImg.Draw(new CircleF(new PointF((float)xMu, (float)yMu), (float)ySigma*2), new Bgr(0, 255, 0), 3);
 
 
-
+            btnStart.Text = Tspace[0, 0].ToString();
             showImage(hsvImg.ToBitmap());
         }
 

@@ -470,7 +470,13 @@ namespace Practical2
                     s = (s == 0) ? 0 : ((s - 0.1) * 10d);
 
                     if (hist3D[(int)h, (int)s] > threshold)
+                    {
                         Tspace[x, y] = 255;
+                        // TEST maak de marker zwart
+                        hsvImg.Data[y, x, 0] = 0;
+                        hsvImg.Data[y, x, 1] = 0;
+                        hsvImg.Data[y, x, 2] = 0;
+                    }
                     else
                         Tspace[x, y] = 0;
                 }

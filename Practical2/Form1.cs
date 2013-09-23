@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using System.Windows.Threading;
 using System.Threading;
 using System.Diagnostics;
+using System.IO;
 
 using Emgu.CV;
 using Emgu.CV.Structure;
@@ -26,8 +27,12 @@ namespace Practical2
         int frameWidth, frameHeight;
         double frameRate = 10;
         Image<Bgr, byte> img;
-        Size size1 = new System.Drawing.Size(30, 30);
-        Size size2 = new System.Drawing.Size(700, 500);
+        Size size1 = new System.Drawing.Size(100, 100);
+        Size size2 = new System.Drawing.Size(500, 500);
+        int gs1 = 5;
+        int gs2 = 5;
+        int gs3 = 2;
+        int gs4 = 2;
 
         Rectangle[] rect = new Rectangle[4];
 
@@ -50,7 +55,7 @@ namespace Practical2
         private void Form1_Load(object sender, EventArgs e)
         {
             this.Text = "Marker Tracking!";
-            capture = new Capture();
+            
         }
 
         private void Update(object sender, EventArgs e)
@@ -129,12 +134,20 @@ namespace Practical2
                     }
                 }
             }
+            else
+            {
+                capture = new Capture();
+                btnStart_Click(sender, e);
+            }
         }
 
-        private void btnOpen_Click(object sender, EventArgs e)
+        private void openFiles(bool videoFile)
         {
             openFile = new OpenFileDialog();
-            openFile.Filter = "Video Files|*.avi;*.mp4;*.mpg";
+            if(videoFile)
+                openFile.Filter = "Video Files|*.avi;*.mp4;*.mpg";
+            else
+                openFile.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp";
             if (openFile.ShowDialog() == DialogResult.OK)
             {
                 if (capture != null)
@@ -145,15 +158,23 @@ namespace Practical2
                 }
                 try
                 {
-                    this.Text = "Viewing Video: " + openFile.FileName;
-                    state = VideoState.Viewing;
+                    if (videoFile)
+                    {
+                        this.Text = "Viewing Video: " + openFile.FileName;
+                        state = VideoState.Viewing;
+                        capture = new Capture(openFile.FileName);
+                        capture.ImageGrabbed += Update;
 
-                    capture = new Capture(openFile.FileName);
-                    capture.ImageGrabbed += Update;
+                        btnStart.Text = "Play";
+                        btnStart.ForeColor = Color.Green;
+                        play = false;
+                    }
+                    else
+                    {
+                        this.Text = "Scanning image: " + openFile.FileName;
 
-                    btnStart.Text = "Play";
-                    btnStart.ForeColor = Color.Green;
-                    play = false;
+                        trainingStage();
+                    }
                 }
                 catch (NullReferenceException ex)
                 {
@@ -164,19 +185,49 @@ namespace Practical2
 
         private void btnTracking_Click(object sender, EventArgs e)
         {
-            timer = new DispatcherTimer();
-            timer.Tick += marker_Detection;
-            timer.Interval = new TimeSpan(0, 0, 0, 0, 1);
-            timer.Start();
+            buttonsClicked(false);            
         }
 
         private void btnFaceDetection_Click(object sender, EventArgs e)
         {
+            buttonsClicked(true);
+        }
 
-            //haarCascade = new HaarCascade("C:/Users/paktw_000/Documents/Uni/4e Jaar/Interactie Technologie/practical2/Recent Werkend/Practical2/haarcascade_frontalface_default.xml");
-            cascadeClassifier = new CascadeClassifier("haarcascade_frontalface_default.xml");
+        private void btnScan_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Please load the cropped marker image");
+            openFiles(false);
+        }
+
+        private void btnOpen_Click(object sender, EventArgs e)
+        {
+            openFiles(true);
+        }
+
+        private void btnReset_Click(object sender, EventArgs e)
+        {
+            if(timer != null)
+                timer.IsEnabled = false;
+            btnStart.Text = "Play";
+            play = false;
+            record = false;
+            if (capture != null)
+            {
+                capture.Dispose();
+                imageBox.Image = null;             
+            }
+        }
+
+        private void buttonsClicked(bool needCascade)
+        {
+            capture = new Capture();
+            if(needCascade)
+                cascadeClassifier = new CascadeClassifier("haarcascade_frontalface_default.xml");
             timer = new DispatcherTimer();
-            timer.Tick += timer_Tick;
+            if(needCascade)
+                timer.Tick += timer_Tick;
+            else
+                timer.Tick += marker_Detection;
             timer.Interval = new TimeSpan(0, 0, 0, 0, 1);
             timer.Start();
         }
@@ -235,7 +286,8 @@ namespace Practical2
                 foreach (var face in faces)
                 {
                     img.Draw(face, new Bgr(0, 0, 255), 2);
-                    location = face.Location;
+                    location.X = face.Location.X + face.Size.Width / 2;
+                    location.Y = face.Location.Y + face.Size.Height / 2;
                 }
 
                 if (location != new Point(0, 0))
@@ -262,19 +314,98 @@ namespace Practical2
             }
         }
 
+        public static TOutput[,] ConvertAll<TInput, TOutput>(TInput[,] array, Converter<TInput, TOutput> converter)
+        {
+            if (array == null)
+            {
+                throw new ArgumentNullException("array");
+            }
+            if (converter == null)
+            {
+                throw new ArgumentNullException("converter");
+            }
+            int height = array.GetLength(0);
+            int width = array.GetLength(1);
+            TOutput[,] localArray = new TOutput[width, height];
+            for (int i = 0; i < height; i++)
+            {
+                for (int j = 0; j < width; j++)
+                    localArray[i, j] = converter(array[i, j]);
+            }
+            return localArray;
+        }
+
+
+
+        private void trainingStage()
+        {
+            // HS space
+            Image<Bgr, Byte> origImg = new Image<Bgr, Byte>(openFile.FileName);
+            Image<Bgr, Byte> smoothImg = origImg.SmoothGaussian(gs1, gs2, gs3, gs4);
+            Image<Hsv, Byte> hsvImg = smoothImg.Convert<Hsv, Byte>();
+
+            /* 2D histogram
+            double[] histHue = new double[hsImg.Width];
+            double[] histSat = new double[hsImg.Height];
+
+            for (int x = 1; x < hsImg.Width; x++)
+            {
+                for (int y = 1; y < hsImg.Height; y++)
+                {
+                    if (hsImg.Data[y, x, 0] == 255)
+                    {
+                        histHue[x]++;
+                        histSat[y]++;
+                    }
+                }
+            }
+
+            // Normalization
+            histHue = Array.ConvertAll(histHue, item => item / hsImg.Width);
+            histSat = Array.ConvertAll(histSat, item => item / hsImg.Height);
+            */
+                        
+            // 3D histogram
+            int[,] hist3D = new int[10, 10];
+
+            for (int x = 0; x < hsvImg.Width; x++)
+            {
+                for (int y = 0; y < hsvImg.Height; y++)
+                {
+                    double h = Math.Round(hsvImg.Data[y, x, 0] / 255d, 1);
+                    h = (h == 0)? 0 : ((h - 0.1) * 10d);
+                                
+                    double s = Math.Round(hsvImg.Data[y, x, 1] / 255d, 1);
+                    s = (s == 0)? 0 : ((s - 0.1) * 10d);
+                                
+                    hist3D[(int)h, (int)s]++;
+                }
+            }
+
+            // Normalization
+            int max = hist3D.Cast<int>().Max();
+            hist3D = ConvertAll(hist3D, item => item / max);
+            MessageBox.Show("Three dimensional histogram created");
+
+            // save histogram>!
+
+            showImage(hsvImg.ToBitmap());
+        }
+
         private void marker_Detection(object sender, EventArgs e)
         {
             Image<Bgr, Byte> origImg = capture.RetrieveBgrFrame();
-            Image<Bgr, Byte> smoothImg = origImg.SmoothGaussian(5, 5, 2, 2);
+            Image<Bgr, Byte> smoothImg = origImg.SmoothGaussian(gs1, gs2, gs3, gs4);
             Image<Hsv, Byte> hsvImg = smoothImg.Convert<Hsv, Byte>();
             Image<Gray, Byte>[] channels = hsvImg.Split();
-            Image<Gray, Byte> hue = channels[0].InRange(new Gray(100), new Gray(200));
+            Image<Gray, Byte> hue = channels[0].InRange(new Gray(0), new Gray(30));
             Image<Gray, Byte> saturation = channels[1].InRange(new Gray(200), new Gray(255));
             Image<Gray, Byte> hsImg = (hue.And(saturation));
 
+            // 2D histogram
             double[] histX = new double[hsImg.Width];
             double[] histY = new double[hsImg.Height];
-
+            
             for (int x = 1; x < hsImg.Width; x++)
             {
                 for (int y = 1; y < hsImg.Height; y++)
@@ -287,20 +418,50 @@ namespace Practical2
                 }
             }
 
-            //  histX = Array.ConvertAll(histX, item => item / hsImg.Width);
-            //  histY = Array.ConvertAll(histY, item => item / hsImg.Height);
+            /* Normalization
+            histX = Array.ConvertAll(histX, item => item / hsImg.Width);
+            histY = Array.ConvertAll(histY, item => item / hsImg.Height);
+            */
+
+            /* 3D histogram
+            double[,] histXY = new double[hsImg.Width, hsImg.Height];
+
+            for (int x = 1; x < hsImg.Width; x++)
+            {
+                for (int y = 1; y < hsImg.Height; y++)
+                {
+                    if (hsImg.Data[y, x, 0] == 255)
+                    {
+                        histX[x]++;
+                        histY[y]++;
+                    }
+                }
+            }
+            */
 
             histX = Array.ConvertAll(histX, item => (item < .5 * histX.Max()) ? 0 : item);
             histY = Array.ConvertAll(histY, item => (item < .5 * histX.Max()) ? 0 : item);
 
-            int x1 = Array.FindIndex(histX, item => item > 0);
-            int y1 = Array.FindIndex(histY, item => item > 0);
-            int x2 = Array.FindLastIndex(histX, item => item > 0);
-            int y2 = Array.FindLastIndex(histY, item => item > 0);
 
-            origImg.Draw(new Rectangle(x1, y1, x2 - x1, y2 - y1), new Bgr(100, 100, 100), 3);
 
-            showImage(origImg.ToBitmap());
+            //origImg.Draw(new CircleF(new PointF((float)xMu, (float)yMu), (float)ySigma*2), new Bgr(0, 255, 0), 3);
+
+
+
+            showImage(hsvImg.ToBitmap());
+        }
+
+        private double gaussian(double value, double[] hist)
+        {
+            hist = Array.ConvertAll(hist, item => item / img.Width);
+            int x1 = Array.FindIndex(hist, item => item > 0);
+            int x2 = Array.FindLastIndex(hist, item => item > 0);
+            int N = x2 - x1;
+            double R = hist.Sum();
+            double Mu = R / N;
+            double[] histX2 = Array.ConvertAll(hist, item => Math.Pow(item - Mu, 2));
+            double Sigma = Math.Sqrt(histX2.Sum() / N);
+            return 1 / (Sigma * Math.Sqrt(2 * Math.PI)) * Math.Exp(-Math.Pow(value - Mu, 2) / (2 * Math.Pow(Sigma, 2)));
         }
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
@@ -311,7 +472,5 @@ namespace Practical2
                 capture.Dispose();
             }
         }
-
-
     }
 }

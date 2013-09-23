@@ -35,6 +35,7 @@
             this.imageBox = new System.Windows.Forms.PictureBox();
             this.checkRecord = new System.Windows.Forms.CheckBox();
             this.btnOpen = new System.Windows.Forms.Button();
+            this.btnReset = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.imageBox)).BeginInit();
             this.SuspendLayout();
             // 
@@ -77,6 +78,7 @@
             this.btnScan.TabIndex = 4;
             this.btnScan.Text = "Start Scan";
             this.btnScan.UseVisualStyleBackColor = true;
+            this.btnScan.Click += new System.EventHandler(this.btnScan_Click);
             // 
             // imageBox
             // 
@@ -107,11 +109,22 @@
             this.btnOpen.UseVisualStyleBackColor = true;
             this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
             // 
+            // btnReset
+            // 
+            this.btnReset.Location = new System.Drawing.Point(297, 546);
+            this.btnReset.Name = "btnReset";
+            this.btnReset.Size = new System.Drawing.Size(92, 23);
+            this.btnReset.TabIndex = 9;
+            this.btnReset.Text = "Reset";
+            this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(755, 581);
+            this.Controls.Add(this.btnReset);
             this.Controls.Add(this.btnOpen);
             this.Controls.Add(this.checkRecord);
             this.Controls.Add(this.imageBox);
@@ -137,6 +150,7 @@
         private System.Windows.Forms.PictureBox imageBox;
         private System.Windows.Forms.CheckBox checkRecord;
         private System.Windows.Forms.Button btnOpen;
+        private System.Windows.Forms.Button btnReset;
     }
 }
 

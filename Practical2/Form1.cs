@@ -457,7 +457,7 @@ namespace Practical2
             // 3D histogram
             double[,] hist3D = ReadIn(@"C:\test.txt");
             double[,] Tspace = new double[hsvImg.Width, hsvImg.Height];
-            double threshold = 0.5; // Greater than threshold
+            double threshold = 0.3; // Greater than threshold
 
             for (int x = 0; x < hsvImg.Width; x++)
             {

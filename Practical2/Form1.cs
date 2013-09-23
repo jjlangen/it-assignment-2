@@ -318,17 +318,9 @@ namespace Practical2
         // Converts a two-dimensional array
         public static TOutput[,] ConvertAll<TInput, TOutput>(TInput[,] arr, Converter<TInput, TOutput> conv)
         {
-            if (arr == null)
-            {
-                throw new ArgumentNullException("array");
-            }
             int h = arr.GetLength(0);
             int w = arr.GetLength(1);
             TOutput[,] locarr = new TOutput[w, h];
-            if (conv == null)
-            {
-                throw new ArgumentNullException("converter");
-            }
             for (int k = 0; k < h; k++)
             {
                 for (int l = 0; l < w; l++)
@@ -383,13 +375,50 @@ namespace Practical2
             }
 
             // Normalization
-            int max = hist3D.Cast<int>().Max();
+            double max = hist3D.Cast<double>().Max();
             hist3D = ConvertAll(hist3D, item => item / max);
+            WriteOut(hist3D, @"C:\test.txt");
             MessageBox.Show("Three dimensional histogram created");
+
 
             // save histogram>!
 
             showImage(hsvImg.ToBitmap());
+
+        }
+
+        static void WriteOut(double[,] testValues, string fileName)
+        {
+            StreamWriter writer = new StreamWriter(fileName);
+            writer.WriteLine(testValues.GetLength(0));
+            writer.WriteLine(testValues.GetLength(1));
+            for (int i = 0; i < testValues.GetLength(0); i++)
+            {
+                for (int j = 0; j < testValues.GetLength(1); j++)
+                {
+                    writer.WriteLine(testValues[i, j]);
+                }
+            }
+            writer.Close();
+        }
+
+        static double[,] ReadIn(string fileName)
+        {
+            StreamReader reader = new StreamReader(fileName);
+            int width;
+            int height;
+            int.TryParse(reader.ReadLine(), out width);
+            int.TryParse(reader.ReadLine(), out height);
+            double[,] readValues = new double[width, height];
+            for (int i = 0; i < readValues.GetLength(0); i++)
+            {
+                for (int j = 0; j < readValues.GetLength(1); j++)
+                {
+                    double.TryParse(reader.ReadLine(), out readValues[i, j]);
+                }
+            }
+            reader.Close();
+            return readValues;
         }
 
         private void marker_Detection(object sender, EventArgs e)
@@ -426,9 +455,9 @@ namespace Practical2
             */
 
             // 3D histogram
-            double[,] hist3D = new double[10, 10];
+            double[,] hist3D = ReadIn(@"C:\test.txt");
             double[,] Tspace = new double[hsvImg.Width, hsvImg.Height];
-            double threshold = 0.0; // Greater than threshold
+            double threshold = 0.5; // Greater than threshold
 
             for (int x = 0; x < hsvImg.Width; x++)
             {

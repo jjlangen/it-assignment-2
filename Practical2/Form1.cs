@@ -484,9 +484,24 @@ namespace Practical2
             cx = ((x2 - x1) / 2 + x1);
             cy = ((y2 - y1) / 2 + y1);
 
-            // Draw the marker and the image
-            origImg.Draw(new Ellipse(new PointF(cx, cy), new SizeF((y2 - y1), (x2 - x1)), 360f), new Bgr(0, 0, 0), -1);
-            showImage(origImg.ToBitmap());
+            if (checkJanKlaassen.Checked)
+            {
+                Image imageImg = origImg.ToBitmap();
+                Graphics canvas = Graphics.FromImage(imageImg);
+
+                Image janKlaassen = Image.FromFile(@"C:\Downloads\janklaassen.png", true);
+                canvas.DrawImage(janKlaassen, new Rectangle(cx, cy, 100, 150), 0, 0, 100, 150, GraphicsUnit.Pixel);
+
+                Bitmap bitmapImg = new Bitmap(imageImg);
+
+                showImage(bitmapImg);
+            }
+            else
+            {
+                // Draw the marker and the image
+                origImg.Draw(new Ellipse(new PointF(cx, cy), new SizeF((y2 - y1), (x2 - x1)), 360f), new Bgr(0, 0, 0), -1);
+                showImage(origImg.ToBitmap());
+            }
         }
 
         // Calculates the value for a var in a histogram

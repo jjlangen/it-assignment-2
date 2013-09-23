@@ -33,9 +33,11 @@ namespace Practical2
         int gs2 = 5;
         int gs3 = 2;
         int gs4 = 2;
+        int cx, cy, x1, y1;
 
         Rectangle[] rect = new Rectangle[4];
 
+        bool markerdetected = false;
         bool play = false;
         bool record = false;
         #endregion
@@ -335,27 +337,6 @@ namespace Practical2
             Image<Bgr, Byte> origImg = new Image<Bgr, Byte>(openFile.FileName);
             Image<Bgr, Byte> smoothImg = origImg.SmoothGaussian(gs1, gs2, gs3, gs4);
             Image<Hsv, Byte> hsvImg = smoothImg.Convert<Hsv, Byte>();
-
-            /* 2D histogram
-            double[] histHue = new double[hsImg.Width];
-            double[] histSat = new double[hsImg.Height];
-
-            for (int x = 1; x < hsImg.Width; x++)
-            {
-                for (int y = 1; y < hsImg.Height; y++)
-                {
-                    if (hsImg.Data[y, x, 0] == 255)
-                    {
-                        histHue[x]++;
-                        histSat[y]++;
-                    }
-                }
-            }
-
-            // Normalization
-            histHue = Array.ConvertAll(histHue, item => item / hsImg.Width);
-            histSat = Array.ConvertAll(histSat, item => item / hsImg.Height);
-            */
                         
             // 3D histogram
             double[,] hist3D = new double[10, 10];
@@ -377,7 +358,7 @@ namespace Practical2
             // Normalization
             double max = hist3D.Cast<double>().Max();
             hist3D = ConvertAll(hist3D, item => item / max);
-            WriteOut(hist3D, @"C:\test.txt");
+            WriteOut(hist3D, @"test.txt");
             MessageBox.Show("Three dimensional histogram created");
 
 
@@ -426,94 +407,73 @@ namespace Practical2
             Image<Bgr, Byte> origImg = capture.RetrieveBgrFrame();
             Image<Bgr, Byte> smoothImg = origImg.SmoothGaussian(gs1, gs2, gs3, gs4);
             Image<Hsv, Byte> hsvImg = smoothImg.Convert<Hsv, Byte>();
-            /*
-            Image<Gray, Byte>[] channels = hsvImg.Split();
-            Image<Gray, Byte> hue = channels[0].InRange(new Gray(0), new Gray(30));
-            Image<Gray, Byte> saturation = channels[1].InRange(new Gray(200), new Gray(255));
-            Image<Gray, Byte> hsImg = (hue.And(saturation));
-            
-
-            // 2D histogram
-            double[] histX = new double[hsImg.Width];
-            double[] histY = new double[hsImg.Height];
-            
-            for (int x = 1; x < hsImg.Width; x++)
-            {
-                for (int y = 1; y < hsImg.Height; y++)
-                {
-                    if (hsImg.Data[y, x, 0] == 255)
-                    {
-                        histX[x]++;
-                        histY[y]++;
-                    }
-                }
-            }
-            
-            // Normalization
-            histX = Array.ConvertAll(histX, item => item / hsImg.Width);
-            histY = Array.ConvertAll(histY, item => item / hsImg.Height);
-            */
 
             // 3D histogram
-            double[,] hist3D = ReadIn(@"C:\test.txt");
-            double[,] Tspace = new double[hsvImg.Width, hsvImg.Height];
+            double[,] hist3D = ReadIn(@"test.txt");
             double threshold = 0.3; // Greater than threshold
-
-            for (int x = 0; x < hsvImg.Width; x++)
-            {
-                for (int y = 0; y < hsvImg.Height; y++)
-                {
-                    double h = Math.Round(hsvImg.Data[y, x, 0] / 255d, 1);
-                    h = (h == 0) ? 0 : ((h - 0.1) * 10d);
-
-                    double s = Math.Round(hsvImg.Data[y, x, 1] / 255d, 1);
-                    s = (s == 0) ? 0 : ((s - 0.1) * 10d);
-
-                    if (hist3D[(int)h, (int)s] > threshold)
-                    {
-                        Tspace[x, y] = 255;
-                        // TEST maak de marker zwart
-                        hsvImg.Data[y, x, 0] = 0;
-                        hsvImg.Data[y, x, 1] = 0;
-                        hsvImg.Data[y, x, 2] = 0;
-                    }
-                    else
-                        Tspace[x, y] = 0;
-                }
-            }
-
             double[] histX = new double[hsvImg.Width];
             double[] histY = new double[hsvImg.Height];
+            int scanx1, scanx2, scany1, scany2;
 
-            for (int x = 0; x < hsvImg.Width; x++)
+            if (markerdetected)
             {
-                for (int y = 0; y < hsvImg.Height; y++)
+                scanx1 = cx - ((cx - x1) * 3);
+                scanx2 = cx + ((cx - x1) * 3);
+                scany1 = cy - ((cy - y1) * 3);
+                scany2 = cy + ((cy - y1) * 3);
+
+                for (int x = scanx1; x >= scanx1  && x <= scanx2; x++)
                 {
-                    if (hsvImg.Data[y, x, 0] == 255)
+                    for (int y = scany1; y >= scanx1 && y <= scanx2; y++)
                     {
-                        histX[x]++;
-                        histY[y]++;
+                        double h = Math.Round(hsvImg.Data[y, x, 0] / 255d, 1);
+                        h = (h == 0) ? 0 : ((h - 0.1) * 10d);
+
+                        double s = Math.Round(hsvImg.Data[y, x, 1] / 255d, 1);
+                        s = (s == 0) ? 0 : ((s - 0.1) * 10d);
+
+                        if (hist3D[(int)h, (int)s] > threshold)
+                        {
+                            histX[x] += hist3D[(int)h, (int)s];
+                            histY[y] += hist3D[(int)h, (int)s];
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int x = 0; x < hsvImg.Width; x++)
+                {
+                    for (int y = 0; y < hsvImg.Height; y++)
+                    {
+                        double h = Math.Round(hsvImg.Data[y, x, 0] / 255d, 1);
+                        h = (h == 0) ? 0 : ((h - 0.1) * 10d);
+
+                        double s = Math.Round(hsvImg.Data[y, x, 1] / 255d, 1);
+                        s = (s == 0) ? 0 : ((s - 0.1) * 10d);
+
+                        if (hist3D[(int)h, (int)s] > threshold)
+                        {
+                            markerdetected = true;
+                            histX[x] += hist3D[(int)h, (int)s];
+                            histY[y] += hist3D[(int)h, (int)s];
+                        }
+                        else
+                            markerdetected = false;
                     }
                 }
             }
 
+            x1 = Array.FindIndex(histX, item => item > 0);
+            y1 = Array.FindIndex(histY, item => item > 0);
+            int x2 = Array.FindLastIndex(histX, item => item > 0);
+            int y2 = Array.FindLastIndex(histY, item => item > 0);
+            cx = ((x2 - x1) / 2 + x1);
+            cy = ((y2 - y1) / 2 + y1);
 
+            origImg.Draw(new Ellipse(new PointF(cx, cy), new SizeF((y2 - y1), (x2 - x1)), 360f), new Bgr(0, 0, 0), -1);
 
-
-
-
-
-
-            //histX = Array.ConvertAll(histX, item => (item < .5 * histX.Max()) ? 0 : item);
-            // histY = Array.ConvertAll(histY, item => (item < .5 * histX.Max()) ? 0 : item);
-
-
-
-            //origImg.Draw(new CircleF(new PointF((float)xMu, (float)yMu), (float)ySigma*2), new Bgr(0, 255, 0), 3);
-
-
-            btnStart.Text = Tspace[0, 0].ToString();
-            showImage(hsvImg.ToBitmap());
+            showImage(origImg.ToBitmap());
         }
 
         private double gaussian(double value, double[] hist)
